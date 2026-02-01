@@ -1,0 +1,15 @@
+Package: synon
+Title: Taxonomic translations to a custom checklist
+Version: 1.0.0
+Authors@R: person("Clark", "Hollenberg", , "chollenb@colostate.edu", role = c("aut", "cre"))
+Description: synon is designed to be used with large vascular plant datasets, particularly those from herbaria specimens with challenging complexity. It allows the user to define a target reference checklist or uses the 
+ NatureServe Network USA/Canada taxonomic backbone by default. synon uses a hierarchical approach to taxonomic translation, beginning with direct matches to the checklist, then user provided translation tables, then built-in translation tables
+ from NatureServe, USDA PLANTS, SEINet, WCVP, and GBIF. If desired, trinomial epithets are dropped from the input taxon names and binomial names are matched to user-provided and built-in tables.
+ Finally, if fuzzy matching is desired, input names are matched using the rWCVP package as full names and binomials. The package currently uses scientific names without authority, but a future version
+ will support the use of full scientific names with authorship.
+License: MIT + file LICENSE
+Imports: dplyr, utils
+Suggests: rWCVP, rWCVPdata
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.3
