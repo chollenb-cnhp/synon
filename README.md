@@ -85,7 +85,7 @@ translated_df <- synonymize(input_df,
                        synonym_LUTs = list(),       # custom user supplied synonym tables.
                        synonym_sources = c("NatureServe", "SEINet", "USDA", "WCVP"),
                        synonym_sources_rerun = FALSE,
-                       fuzzy = TRUE,
+                       fuzzy = FALSE,
                        wcvp_rerun = FALSE,
                        ssp_mods = TRUE)
 ```
