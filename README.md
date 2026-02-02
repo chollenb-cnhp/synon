@@ -39,6 +39,35 @@ These tables are filtered dynamically to your target checklist to minimize spuri
 
 ## 🔧 Installation
 
+You can install BulkCAT directly from GitHub using the `remotes` package:
+
 ```r
-# install.packages("devtools")
-devtools::install_github("/synon")
+# Install remotes if you don't already have it
+install.packages("remotes")
+
+# Install BulkCAT from GitHub
+remotes::install_github("chollenb-cnhp/synon")
+```
+
+After installation, load the package:
+
+```r
+library(BulkCAT)
+
+?synonymize
+```
+
+Example usage:
+
+```r
+translated_df <- synonymize(input_df,
+                       name_col = "scientificName",
+                       checklist = NA,                # usually a state or regional checklist maintained by a Natural Heritage Program. Otherwise, defaults to NatureServe global.
+                       checklist_name_col = "SNAME",
+                       synonym_LUTs = list(),       # custom user supplied synonym tables.
+                       synonym_sources = c("NatureServe", "SEINet", "USDA", "WCVP"),
+                       synonym_sources_rerun = FALSE,
+                       fuzzy = TRUE,
+                       wcvp_rerun = FALSE,
+                       ssp_mods = TRUE)
+```
