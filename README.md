@@ -39,20 +39,20 @@ These tables are filtered dynamically to your target checklist to minimize spuri
 
 ## 🔧 Installation
 
-You can install BulkCAT directly from GitHub using the `remotes` package:
+You can install synon directly from GitHub using the `remotes` package:
 
 ```r
 # Install remotes if you don't already have it
 install.packages("remotes")
 
-# Install BulkCAT from GitHub
+# Install synon from GitHub
 remotes::install_github("chollenb-cnhp/synon")
 ```
 
 After installation, load the package:
 
 ```r
-library(BulkCAT)
+library(synon)
 
 ?synonymize
 ```
