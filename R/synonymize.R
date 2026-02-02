@@ -56,7 +56,7 @@
 #' df <- data.frame(scientificName = c("Pinus murrayana", "Quercus alba"))
 #' synonymize(df)
 #' }
-#'
+#' @importFrom magrittr %>%
 #' @export
 
 

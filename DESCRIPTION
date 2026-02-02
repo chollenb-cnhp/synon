@@ -8,7 +8,7 @@ Description: synon is designed to be used with large vascular plant datasets, pa
  Finally, if fuzzy matching is desired, input names are matched using the rWCVP package as full names and binomials. The package currently uses scientific names without authority, but a future version
  will support the use of full scientific names with authorship.
 License: MIT + file LICENSE
-Imports: dplyr, utils
+Imports: dplyr, utils, magrittr
 Suggests: rWCVP, rWCVPdata
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)

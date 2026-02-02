@@ -12,7 +12,7 @@ synonymize(
   synonym_LUTs = list(),
   synonym_sources = c("NatureServe", "SEINet", "USDA", "WCVP"),
   synonym_sources_rerun = FALSE,
-  fuzzy = TRUE,
+  fuzzy = FALSE,
   wcvp_rerun = FALSE,
   ssp_mods = FALSE
 )
@@ -83,7 +83,6 @@ Built-in synonym tables are shipped with the package and loaded from
 df <- data.frame(scientificName = c("Pinus murrayana", "Quercus alba"))
 synonymize(df)
 }
-
 }
 \seealso{
 \code{\link[rWCVP]{wcvp_match_names}}
