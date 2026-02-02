@@ -35,6 +35,11 @@ It is designed for real-world taxonomic chaos: outdated names, inconsistent infr
 
 These tables are filtered dynamically to your target checklist to minimize spurious translations.
 
+## User-supplied Synonym Sources
+
+Dataframes must have *inputName* and *outputName* columns
+
+
 ---
 
 ## 🔧 Installation
@@ -57,7 +62,20 @@ library(synon)
 ?synonymize
 ```
 
-Example usage:
+## Additional downloads for optional fuzzy matching
+
+Fuzzy matching requires download of rWCVP and rWCVP data:
+See https://matildabrown.github.io/rWCVP/ and **cite appropriately if fuzzy matching** used!
+
+If desired:
+```r
+# install.packages("remotes")
+devtools::install_github("matildabrown/rWCVP")
+```
+
+---
+
+## Example usage:
 
 ```r
 translated_df <- synonymize(input_df,
