@@ -341,11 +341,15 @@ synonymize <- function(input_df,
       # ---------------------------------------
       # Also write CSVs (for review and use as custom user supplied LUTs to avoid retranslating the same names.
       # ---------------------------------------
+
+      ts <- format(Sys.time(), "%Y%m%d_%H%M%S")
+
       if (is_binomial) {
-        ts <- format(Sys.time(), "%Y%m%d_%H%M%S")
-        utils::write.csv(wcvp_fuzzy_LUT, paste0("rWCVP/rWCVP_fuzzy_binomial_", ts, ".csv"), row.names = FALSE)
+        file_name <- paste0("rWCVP/rWCVP_fuzzy_binomial_", ts, ".csv")
+        utils::write.csv(wcvp_fuzzy_LUT, file_name, row.names = FALSE)
       } else {
-        utils::write.csv(wcvp_fuzzy_LUT, paste0("rWCVP/rWCVP_fuzzy_", ts, ".csv"), row.names = FALSE)
+        file_name <- paste0("rWCVP/rWCVP_fuzzy_", ts, ".csv")
+        utils::write.csv(wcvp_fuzzy_LUT, file_name, row.names = FALSE)
       }
     }
     return(wcvp_fuzzy_LUT)
@@ -356,26 +360,15 @@ synonymize <- function(input_df,
   {
     print("Running rWCVP...")
     rWCVP_lut <- wcvp_run(unique_df, name_col = name_col, rerun = wcvp_rerun, is_binomial = FALSE)
-    if (!is.na(rWCVP_lut)){
-      unique_df <- process_LUT(rWCVP_lut, unique_df, checklist, source_name = "rWCVP", name_col = "scientificName", ssp=FALSE)
-    }
-
-      # ---------------------------------------
-      # Apply LUTs
-      # ---------------------------------------
-      if (is_binomial){
-        unique_df <- process_LUT(wcvp_fuzzy_LUT, unique_df, checklist, source_name = "rWCVP_binomial", name_col = "binomialName")
-      }
-      else{
-
-        unique_df <- process_LUT(wcvp_fuzzy_LUT, unique_df, checklist, source_name = "rWCVP", name_col = name_col)
+    if (!(length(rWCVP_lut) == 1 && is.na(rWCVP_lut))) {
+        unique_df <- process_LUT(rWCVP_lut, unique_df, checklist, source_name = "rWCVP", name_col = name_col)
       }
 
     if (ssp_mods) {
       print("Running WCVP binomial")
       rWCVP_lut <- wcvp_run(unique_df, name_col = "binomialName", rerun = wcvp_rerun, is_binomial = TRUE)
-      if (!is.na(rWCVP_lut)){
-        unique_df <- process_LUT(rWCVP_lut, unique_df, checklist, source_name = "rWCVP", name_col = "binomialName")
+      if (!(length(rWCVP_lut) == 1 && is.na(rWCVP_lut))) {
+        unique_df <- process_LUT(rWCVP_lut, unique_df, checklist, source_name = "rWCVP_binomial", name_col = "binomialName")
       }
     }
   }
