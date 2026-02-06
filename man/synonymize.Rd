@@ -14,7 +14,8 @@ synonymize(
   synonym_sources_rerun = FALSE,
   fuzzy = FALSE,
   wcvp_rerun = FALSE,
-  ssp_mods = FALSE
+  ssp_mods = FALSE,
+  cross_check = TRUE
 )
 }
 \arguments{
@@ -35,12 +36,14 @@ to apply. Any of \code{"NatureServe"}, \code{"SEINet"}, \code{"USDA"}, \code{"WC
 
 \item{synonym_sources_rerun}{Logical. If TRUE, reload synonym sources (ex: with a new target checklist).}
 
-\item{fuzzy}{Logical. If TRUE, attempt exact and fuzzy matching using \pkg{rWCVP}.}
+\item{fuzzy}{Logical. If TRUE, attempt exact and fuzzy matching using \pkg{rWCVP}. Results will be cross-checked against all other LUTs to match checklist.}
 
 \item{wcvp_rerun}{Logical. If TRUE, ignored cached \pkg{rWCVP} results and rerun. Note that you can pass saved LUTs from previous runs if desired in synonym_LUTs.}
 
 \item{ssp_mods}{Logical. If TRUE, perform a second pass using only binomial names
 (genus + species) for unresolved infraspecific names.}
+
+\item{cross_check}{Logical. If TRUE, match WCVP names to checklist via other LUTs.}
 }
 \value{
 The input data frame with two additional columns:

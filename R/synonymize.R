@@ -31,10 +31,11 @@
 #' @param synonym_sources Character vector giving the order of built-in synonym sources
 #'   to apply. Any of \code{"NatureServe"}, \code{"SEINet"}, \code{"USDA"}, \code{"WCVP"}.
 #' @param synonym_sources_rerun Logical. If TRUE, reload synonym sources (ex: with a new target checklist).
-#' @param fuzzy Logical. If TRUE, attempt exact and fuzzy matching using \pkg{rWCVP}.
+#' @param fuzzy Logical. If TRUE, attempt exact and fuzzy matching using \pkg{rWCVP}. Results will be cross-checked against all other LUTs to match checklist.
 #' @param wcvp_rerun Logical. If TRUE, ignored cached \pkg{rWCVP} results and rerun. Note that you can pass saved LUTs from previous runs if desired in synonym_LUTs.
 #' @param ssp_mods Logical. If TRUE, perform a second pass using only binomial names
 #'   (genus + species) for unresolved infraspecific names.
+#' @param cross_check Logical. If TRUE, match WCVP names to checklist via other LUTs.
 #'
 #' @details
 #' The function never overwrites an already-resolved \code{acceptedName}.
@@ -69,7 +70,8 @@ synonymize <- function(input_df,
                        synonym_sources_rerun = FALSE,
                        fuzzy = FALSE,
                        wcvp_rerun = FALSE,
-                       ssp_mods = FALSE) {
+                       ssp_mods = FALSE,
+                       cross_check = TRUE) {
 
 
   # -----------------------------------------
@@ -132,6 +134,33 @@ synonymize <- function(input_df,
     return(.bulkcat_cache$builtin_LUTs)
   }
   builtin_LUTs <- get_builtin_LUTs(synonym_sources, synonym_sources_rerun)
+
+  # Validate user supplied LUTs
+  if (length(synonym_LUTs)>0){
+    if (is.data.frame(synonym_LUTs)) {
+      synonym_LUTs <- list(synonym_LUTs)
+    }
+
+    stopifnot(
+      is.list(synonym_LUTs),
+      all(vapply(synonym_LUTs, is.data.frame, logical(1)))
+    )
+
+    for (i in seq_along(synonym_LUTs)) {
+      LUT <- synonym_LUTs[[i]]
+      cols <- colnames(LUT)
+      if (!all(c("inputName", "outputName") %in% cols))
+      {
+        stop("User provided LUT(s) must contain the columns 'outputName' and 'inputName'.")
+      }
+      else{
+        synonym_LUTs[[i]] <- dplyr::select(LUT, inputName, outputName)
+      }
+    }
+  }
+
+
+
   # ------------------------------------------
   # Create unique_df from input and initialize acceptedName and translationSource
   # ------------------------------------------
@@ -215,14 +244,6 @@ synonymize <- function(input_df,
     # 4a apply user-provided LUTs in order
     print("Applying user supplied LUTs...")
     if (length(synonym_LUTs) > 0) {
-      if (is.data.frame(synonym_LUTs)) {
-        synonym_LUTs <- list(synonym_LUTs)
-      }
-
-      stopifnot(
-        is.list(synonym_LUTs),
-        all(vapply(synonym_LUTs, is.data.frame, logical(1)))
-      )
 
       for (i in seq_along(synonym_LUTs)) {
         LUT <- synonym_LUTs[[i]]
@@ -237,6 +258,7 @@ synonymize <- function(input_df,
     print("Applying built-in LUTs...")
 
     if (length(builtin_LUTs) > 0) {
+      # find direct matches in LUTs
       for (source_name in names(builtin_LUTs)) {
         if (source_name != "rWCVP") {
           print(paste0("Applying built-in LUTs for ", source_name))
@@ -365,19 +387,91 @@ synonymize <- function(input_df,
   }
   #######################################
 
+  # helper function for defining intermediate columns
+  set_cross_check <- function(unique_df, LUT, source="rWCVP", name_col) {
+    intermed_col <- paste0(source, "_", name_col)
+    unique_df <- unique_df %>%
+      dplyr::left_join(
+        LUT,
+        by = setNames("inputName", name_col)
+      ) %>%
+      dplyr::mutate(!!intermed_col := outputName) %>%
+      dplyr::select(-outputName)
+    return(unique_df)
+  }
+
+  bin_drop <- function(unique_df, name_col, drop_col){
+
+    # compute binomial from drop_col (first two words)
+    binomial <- function(x) {
+      sapply(
+        strsplit(x, "\\s+"),
+        function(y) if (length(y) >= 2) paste(y[1:2], collapse = " ") else NA_character_
+      )
+    }
+
+    bin_vals <- binomial(unique_df[[drop_col]])
+
+    unique_df$acceptedName[
+      is.na(unique_df$acceptedName) &
+        bin_vals %in% checklist[[checklist_name_col]]
+    ] <- bin_vals[
+      is.na(unique_df$acceptedName) &
+        bin_vals %in% checklist[[checklist_name_col]]
+    ]
+
+    return (unique_df)
+  }
+
+  # run cross checks if WCVP is provided as a source
+  if ("WCVP" %in% synonym_sources && cross_check){
+    print("############# Running WCVP cross check...")
+    # first use cross check with WCVP to avoid unneccesary fuzzy matching
+    source <- "WCVP"
+    unique_df <- set_cross_check(unique_df, builtin_LUTs[["rWCVP"]], source=source, name_col = name_col)
+    # run intermed_col output against all other LUTs
+    intermed_col <- paste0(source, "_", name_col)
+    unique_df <- run_synonyms(unique_df, intermed_col)
+    unique_df <- bin_drop(unique_df, name_col, intermed_col)
+
+    print("############# Running WCVP binomial cross check...")
+    # first use cross check with WCVP to avoid unneccesary fuzzy matching
+    source <- "WCVP"
+    unique_df <- set_cross_check(unique_df, builtin_LUTs[["rWCVP"]], source=source, name_col = "binomialName")
+    # run intermed_col output against all other LUTs
+    intermed_col <- paste0(source, "_", "binomialName")
+    unique_df <- run_synonyms(unique_df, intermed_col)
+    unique_df <- bin_drop(unique_df, name_col, intermed_col)
+  }
+
+
   if (fuzzy)
   {
-    print("Running rWCVP...")
+    print("############### Running rWCVP...")
     rWCVP_lut <- wcvp_run(unique_df, name_col = name_col, rerun = wcvp_rerun, is_binomial = FALSE)
     if (!(length(rWCVP_lut) == 1 && is.na(rWCVP_lut))) {
-        unique_df <- process_LUT(rWCVP_lut, unique_df, checklist, source_name = "rWCVP", name_col = name_col)
-      }
+        source <- "rWCVP"
+        unique_df <- process_LUT(rWCVP_lut, unique_df, checklist, source_name = source, name_col = name_col)
+        # cross process results in other LUTs
+        unique_df <- set_cross_check(unique_df, rWCVP_lut, source = source, name_col = name_col)
+        # run intermed_col output against all other LUTs
+        intermed_col <- paste0(source, "_", name_col)
+        unique_df <- run_synonyms(unique_df, intermed_col)
+        unique_df <- bin_drop(unique_df, name_col, intermed_col)
+    }
 
     if (ssp_mods) {
-      print("Running WCVP binomial")
+      print("############### Running rWCVP binomial")
       rWCVP_lut <- wcvp_run(unique_df, name_col = "binomialName", rerun = wcvp_rerun, is_binomial = TRUE)
       if (!(length(rWCVP_lut) == 1 && is.na(rWCVP_lut))) {
+        source <- "rWCVP"
         unique_df <- process_LUT(rWCVP_lut, unique_df, checklist, source_name = "rWCVP_binomial", name_col = "binomialName")
+        # cross process results in other LUTs
+        unique_df <- set_cross_check(unique_df, rWCVP_lut, source=source, name_col = "binomialName")
+        # run intermed_col output against all other LUTs
+        intermed_col <- paste0(source, "_", "binomialName")
+        unique_df <- run_synonyms(unique_df, intermed_col)
+        unique_df <- bin_drop(unique_df, name_col, intermed_col)
       }
     }
   }
