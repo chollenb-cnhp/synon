@@ -26,7 +26,7 @@
 #' @param checklist Optional data frame of accepted names. If \code{NULL} or missing,
 #'   the built-in NatureServe Network tracheophyte checklist is used. This may contain names which are not correct in your region.
 #' @param checklist_name_col Column in \code{checklist} containing accepted names.
-#' @param synonym_LUTs Optional list of user-supplied data frames with columns
+#' @param synonym_LUTs Optional user-supplied data frame or list of data frames with columns
 #'   \code{inputName} and \code{outputName}.
 #' @param synonym_sources Character vector giving the order of built-in synonym sources
 #'   to apply. Any of \code{"NatureServe"}, \code{"SEINet"}, \code{"USDA"}, \code{"WCVP"}.
@@ -215,6 +215,15 @@ synonymize <- function(input_df,
     # 4a apply user-provided LUTs in order
     print("Applying user supplied LUTs...")
     if (length(synonym_LUTs) > 0) {
+      if (is.data.frame(synonym_LUTs)) {
+        synonym_LUTs <- list(synonym_LUTs)
+      }
+
+      stopifnot(
+        is.list(synonym_LUTs),
+        all(vapply(synonym_LUTs, is.data.frame, logical(1)))
+      )
+
       for (i in seq_along(synonym_LUTs)) {
         LUT <- synonym_LUTs[[i]]
         source_name <- ifelse(i <= length(synonym_sources),

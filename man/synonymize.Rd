@@ -27,7 +27,7 @@ the built-in NatureServe Network tracheophyte checklist is used. This may contai
 
 \item{checklist_name_col}{Column in \code{checklist} containing accepted names.}
 
-\item{synonym_LUTs}{Optional list of user-supplied data frames with columns
+\item{synonym_LUTs}{Optional user-supplied data frame or list of data frames with columns
 \code{inputName} and \code{outputName}.}
 
 \item{synonym_sources}{Character vector giving the order of built-in synonym sources
