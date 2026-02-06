@@ -87,5 +87,6 @@ translated_df <- synonymize(input_df,
                        synonym_sources_rerun = FALSE,
                        fuzzy = FALSE,
                        wcvp_rerun = FALSE,
-                       ssp_mods = TRUE)
+                       ssp_mods = TRUE,
+                       cross_check = TRUE)
 ```
